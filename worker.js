@@ -3938,7 +3938,7 @@ let calcChallengesWork = function(chunks, baseChunkData, oldTempItemSkill) {
                 if (!isNaN(starSize)) {
                     let starCap = 0;
                     if (starSitesUnlocked > 0) {
-                        starCap = rules['Shooting Star Tier Per Location'] ? Math.min(starSitesUnlocked, 9) : Math.min(starSitesUnlocked + 5, 9);
+                        starCap = rules['Shooting Star Start At Tier 6'] ? Math.min(starSitesUnlocked + 5, 9) : Math.min(starSitesUnlocked, 9);
                     }
                     if (starSize > starCap) {
                         validChallenge = false;

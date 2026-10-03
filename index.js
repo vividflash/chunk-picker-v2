@@ -860,8 +860,8 @@ let subRuleDefault = {
 };                                                                              // Default value of sub-rule when parent is checked
 
 let ruleStructureConflict = {
-    "Shooting Star Tier Per Location": ["Shooting Star Start At Tier 6"],
-    "Shooting Star Start At Tier 6": ["Shooting Star Tier Per Location"]
+    "Shooting Star Start At Tier 6": ["Shooting Star Tier Per Location"],
+    "Shooting Star Tier Per Location": ["Shooting Star Start At Tier 6"]
 };                                                                              // Rules that conflict with each other and can't both be checked
 
 let taskGeneratingRules = {
