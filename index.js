@@ -390,6 +390,8 @@ let rules = {
     "Wield Crafted Items Override": false,
     "Multi Step Processing": false,
     "Shooting Star": false,
+    "Shooting Star Tier Per Location": false,
+    "Shooting Star Start At Tier 6": false,
     "Forestry": false,
     "ForestryXp": false,
     "Puro-Puro": false,
@@ -496,6 +498,8 @@ let ruleNames = {
     "Wield Crafted Items Override": "Require higher level processing skill tasks if the resulting item would be a BiS (may require longer calculation times)<span class='wieldCraftedItemsOverrideRuleTooltip'></span>",
     "Multi Step Processing": `Allow higher level processing of resources to enable other processing tasks <span class='rule-asterisk noscroll'>*</span><span class='multiStepProcessingRuleTooltip'></span>`,
     "Shooting Star": "Getting the level to mine all tiers of shooting stars count as Mining skill tasks <span class='rule-asterisk noscroll'>*</span>",
+    "Shooting Star Tier Per Location": "+1 Tier per location: only shooting star sizes up to the number of unlocked landing sites count as Mining skill tasks (1 site = size 1, up to size 9 at 9 or more sites)",
+    "Shooting Star Start At Tier 6": "Start at Tier 6, +1 Tier per location: the first landing site requires up to size 6 (Mining 60), each further site adds one size, up to size 9 at 4 or more sites",
     "Forestry": "Forestry events and rewards count as part of your chunks once you have access to the forestry kit",
     "ForestryXp": "Forestry events count as a primary way to gain xp in Woodcutting/Farming/Construction/Fletching/Hunter/Thieving <span class='rule-asterisk noscroll'>*</span>",
     "Puro-Puro": "Allow implings from Puro-Puro & their drops to count towards chunk tasks",
@@ -789,7 +793,7 @@ let ruleStructure = {
         "Secondary MTA": true
     },
     "Mining": {
-        "Shooting Star": true
+        "Shooting Star": ["Shooting Star Tier Per Location", "Shooting Star Start At Tier 6"]
     },
     "Prayer": {
         "Prayers": true
@@ -854,6 +858,11 @@ let subRuleDefault = {
     "All Droptables": false,
     "Rare Drop": false,
 };                                                                              // Default value of sub-rule when parent is checked
+
+let ruleStructureConflict = {
+    "Shooting Star Tier Per Location": ["Shooting Star Start At Tier 6"],
+    "Shooting Star Start At Tier 6": ["Shooting Star Tier Per Location"]
+};                                                                              // Rules that conflict with each other and can't both be checked
 
 let taskGeneratingRules = {
     "Kill X": true,
@@ -12605,6 +12614,22 @@ let checkOffRules = function(didRedo, startup) {
     let extraFilter = !onMobile ? '.rules-content ' : '';
     $('.panel-search').hasClass('visible') && (extraFilter = '.panel-search ');
     let redo = false;
+    // A conflicting rule was just checked, so uncheck the rules it conflicts with
+    Object.keys(ruleStructureConflict).forEach((rule) => {
+        if ($(extraFilter + '.' + rule.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule > label > span > input').prop('checked') && !rules[rule]) {
+            ruleStructureConflict[rule].forEach((conflict) => {
+                $(extraFilter + '.' + conflict.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule > label > span > input').prop('checked', false);
+            });
+        }
+    });
+    // Stored data can have both conflicting rules checked, so the first one wins
+    Object.keys(ruleStructureConflict).forEach((rule) => {
+        if ($(extraFilter + '.' + rule.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule > label > span > input').prop('checked')) {
+            ruleStructureConflict[rule].forEach((conflict) => {
+                $(extraFilter + '.' + conflict.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule > label > span > input').prop('checked', false);
+            });
+        }
+    });
     Object.keys(rules).forEach((rule) => {
         if (subRuleDefault[rule] && rules[rule] !== $(extraFilter + '.' + rule.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule > label > span > input').prop('checked')) {
             $(extraFilter + '.' + rule.replaceAll(' ', '_').replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^\`{|}~]/g, '').toLowerCase() + '-rule').children('.subrule').children('.checkbox').children('.checkbox__input').children('input').prop('checked', subRuleDefault[rule]);

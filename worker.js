@@ -178,6 +178,7 @@ let manualPrimary = {};
 let updateLevel;
 
 let clueTasksPossible = {};
+let starSitesUnlocked = 0;
 let areasStructure = {};
 let tempChunkData = {};
 let craftedBisOverride = {};
@@ -557,6 +558,7 @@ let calcChallenges = function(chunks, baseChunkData) {
     let tempItemSkill = {};
     let tempMultiStepSkill = {};
     let i = 0;
+    starSitesUnlocked = 0;
     !!manualTasks && !!manualTasks['Quest'] && Object.keys(manualTasks['Quest']).forEach((name) => {
         let manualOff = false;
         let i = 0;
@@ -3596,6 +3598,10 @@ let calcChallenges = function(chunks, baseChunkData) {
         Object.keys(tempClueTasksPossible).forEach((tier) => {
             clueTasksPossible[tier] = (tempClueTasksPossible[tier] / (tempClueTasksPossible[tier] + tempClueTasksNotPossible[tier])) * 100;
         });
+        starSitesUnlocked = 0;
+        if ((rules['Shooting Star Tier Per Location'] || rules['Shooting Star Start At Tier 6']) && newValids.hasOwnProperty('Nonskill') && !!chunkInfo['challenges']['Nonskill']) {
+            starSitesUnlocked = Object.keys(newValids['Nonskill']).filter((task) => !!chunkInfo['challenges']['Nonskill'][task] && chunkInfo['challenges']['Nonskill'][task].hasOwnProperty('StarRegion')).length;
+        }
         !!baseChunkData && !!baseChunkData['items'] && Object.keys(baseChunkData['items']).filter(item => { return Object.keys(baseChunkData['items'][item]).length === 0 }).forEach((item) => {
             delete baseChunkData['items'][item];
         });
@@ -3927,6 +3933,19 @@ let calcChallengesWork = function(chunks, baseChunkData, oldTempItemSkill) {
                     return true;
                 }
             });
+            if (skill === 'Mining' && rules['Shooting Star'] && (rules['Shooting Star Tier Per Location'] || rules['Shooting Star Start At Tier 6']) && !!chunkInfo['challenges'][skill][name]['Category'] && chunkInfo['challenges'][skill][name]['Category'].includes('Shooting Star')) {
+                let starSize = parseInt((name.split('size-')[1] || '').charAt(0));
+                if (!isNaN(starSize)) {
+                    let starCap = 0;
+                    if (starSitesUnlocked > 0) {
+                        starCap = rules['Shooting Star Tier Per Location'] ? Math.min(starSitesUnlocked, 9) : Math.min(starSitesUnlocked + 5, 9);
+                    }
+                    if (starSize > starCap) {
+                        validChallenge = false;
+                        wrongThings.push('Shooting Star Sites');
+                    }
+                }
+            }
             if (!rules['Cleaning Herbs'] && (name.includes('Clean a') || name.includes('(unf)')) && skill === 'Herblore' && chunkInfo['challenges'][skill][name]['Level'] > 1) {
                 chunkInfo['challenges'][skill][name]['NeverShow'] = true;
             }
